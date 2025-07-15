@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>[ ClownPiece Terminal ]</title>
+    <title>[ Panel de Control de ClownPiece ]</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>CLOWNPIECE C2 SERVER</h1>
+            <h1>CONSOLA DE COMANDO DE CLOWNPIECE</h1>
         </header>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -23,66 +23,50 @@
         {% endwith %}
 
         <div class="panel-envio">
-            <h2>// COMMS_TERMINAL</h2>
+            <h2>// TERMINAL DE COMUNICACIONES</h2>
             <form id="unified-form" action="{{ url_for('web.enviar') }}" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="submit_type" id="submit_type" value="simple">
-                <label for="text_channel_id">&gt; SELECT_CHANNEL:</label>
+                <label for="text_channel_id">&gt; SELECCIONAR CANAL:</label>
                 <select id="text_channel_id" name="channel_id" required>
-                    {% for guild in guilds_data %}
-                        <optgroup label="-- {{ guild.guild_name }} --">
-                            {% for channel in guild.channels %}
-                                <option value="{{ channel.id }}" {% if last_text_channel == channel.id|string %}selected{% elif not last_text_channel and channel.name == 'general-gay' %}selected{% endif %}>
-                                    #{{ channel.name }}
-                                </option>
-                            {% endfor %}
-                        </optgroup>
-                    {% endfor %}
-                </select>
+                    </select>
 
-                <button type="button" id="toggle-mode-btn">&gt; ENGAGE_EMBED_MODE</button>
+                <button type="button" id="toggle-mode-btn" class="toggle-button">&gt; CREAR MENSAJE EMBED</button>
 
                 <div id="simple-fields">
-                    <label for="message">&gt; MESSAGE_PAYLOAD:</label>
+                    <label for="message">&gt; CONTENIDO DEL MENSAJE:</label>
                     <textarea id="message" name="message" rows="4"></textarea>
-                    <label for="file">&gt; ATTACH_FILE:</label>
+                    <label for="file">&gt; ADJUNTAR ARCHIVO:</label>
                     <input type="file" id="file" name="file">
                 </div>
 
                 <div id="embed-fields" style="display: none;">
-                    <label for="embed_title">&gt; EMBED_TITLE:</label>
+                    <label for="embed_title">&gt; TÍTULO DEL EMBED:</label>
                     <input type="text" id="embed_title" name="embed_title">
-                    <label for="embed_description">&gt; EMBED_DESC:</label>
+                    <label for="embed_description">&gt; DESCRIPCIÓN DEL EMBED:</label>
                     <textarea id="embed_description" name="embed_description" rows="5"></textarea>
-                    <label for="embed_color">&gt; EMBED_HEX_COLOR:</label>
-                    <input type="text" id="embed_color" name="embed_color" value="#00ff41">
+
+                    <label for="embed_color_input">&gt; COLOR DEL EMBED (HEX):</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="embed_color_input" name="embed_color" value="#a5ffc9">
+                        <div id="color_preview" class="color-preview" onclick="document.getElementById('embed_color_input').click();"></div>
+                    </div>
                 </div>
-                <button type="submit">&gt; EXECUTE_SEND</button>
+                <button type="submit">&gt; EJECUTAR ENVÍO</button>
             </form>
         </div>
 
         <div class="panel-voz">
-             <h2>// VOICE_CONTROL</h2>
+             <h2>// CONTROL DE VOZ</h2>
              <form action="{{ url_for('web.control_voz') }}" method="post">
-                <label for="voice_channel_id">&gt; SELECT_VOICE_CHANNEL:</label>
+                <label for="voice_channel_id">&gt; SELECCIONAR CANAL DE VOZ:</label>
                 <select id="voice_channel_id" name="channel_id" required>
-                    {% for guild in guilds_data %}
-                        <optgroup label="-- {{ guild.guild_name }} --">
-                            {% for channel in guild.voice_channels %}
-                                <option value="{{ channel.id }}" {% if last_voice_channel == channel.id|string %}selected{% endif %}>
-                                    {{ channel.name }}
-                                </option>
-                            {% endfor %}
-                        </optgroup>
-                    {% endfor %}
-                </select>
-                <button type="submit" name="action" value="join">&gt; CONNECT</button>
-                <button type="submit" name="action" value="leave">&gt; DISCONNECT</button>
+                    </select>
+                <button type="submit" name="action" value="join">&gt; CONECTAR</button>
+                <button type="submit" name="action" value="leave">&gt; DESCONECTAR</button>
             </form>
         </div>
     </div>
 
-    <script>
-        // ... (pega aquí el mismo bloque de JavaScript de la respuesta anterior)
-    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

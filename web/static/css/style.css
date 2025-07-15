@@ -2,11 +2,12 @@
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
 :root {
-    --background-color: #0d0208;
-    --main-color: #00ff41;
-    --secondary-color: #ff00ff;
-    --border-color: #008f11;
-    --container-bg: rgba(10, 25, 10, 0.5);
+    /* Paleta de colores más suave y legible */
+    --background-color: #1a1c1d; /* Un gris oscuro en lugar de negro puro */
+    --main-color: #a5ffc9;       /* Un verde menta más suave */
+    --secondary-color: #84D2F6;  /* Un azul cielo claro */
+    --border-color: #3a5a40;      /* Un verde oscuro para los bordes */
+    --container-bg: rgba(20, 35, 25, 0.6);
 }
 
 body {
@@ -14,36 +15,21 @@ body {
     color: var(--main-color);
     font-family: 'VT323', monospace;
     font-size: 18px;
-    text-shadow: 0 0 5px var(--main-color), 0 0 10px var(--main-color);
-    animation: text-flicker 3s linear infinite;
+    /* Se ha reducido el text-shadow para mejorar la legibilidad */
+    text-shadow: 0 0 2px rgba(165, 255, 201, 0.5);
 }
 
 .container {
     width: 900px;
     margin: 20px auto;
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     background: var(--container-bg);
     padding: 20px;
-    box-shadow: 0 0 15px var(--border-color);
+    box-shadow: 0 0 10px rgba(58, 90, 64, 0.5);
     position: relative;
 }
 
-/* Efecto de líneas de escaneo */
-.container::before {
-    content: " ";
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-    z-index: 2;
-    background-size: 100% 2px, 3px 100%;
-    pointer-events: none;
-    animation: scanlines 2s linear infinite;
-}
-
+/* Se ha quitado la animación de scanlines del contenedor para reducir la distracción */
 header {
     text-align: center;
     margin-bottom: 20px;
@@ -51,7 +37,7 @@ header {
 h1 {
     font-size: 36px;
     color: var(--secondary-color);
-    text-shadow: 0 0 5px var(--secondary-color), 0 0 10px var(--secondary-color);
+    text-shadow: 0 0 5px var(--secondary-color);
     margin: 0;
 }
 h2 {
@@ -62,11 +48,7 @@ h2 {
     margin-top: 20px;
 }
 
-label {
-    display: block;
-    margin-bottom: 5px;
-}
-input, textarea, select, button {
+label, select, input, textarea, button {
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--main-color);
@@ -76,17 +58,48 @@ input, textarea, select, button {
     width: 98%;
     margin-bottom: 15px;
 }
+
 button, input[type="submit"] {
     background-color: var(--border-color);
-    color: var(--background-color);
+    color: #FFFFFF;
     cursor: pointer;
     text-shadow: none;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 button:hover {
     background-color: var(--main-color);
+    color: var(--background-color);
     box-shadow: 0 0 10px var(--main-color);
 }
+
+/* --- ESTILOS PARA EL MENÚ DESPLEGABLE --- */
+select {
+    /* Apariencia personalizada para el selector cerrado */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a5ffc9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5rem; /* Espacio para la flecha */
+}
+
+/* Estilo para las opciones dentro del menú desplegable */
+select option {
+    background: var(--background-color);
+    color: var(--main-color);
+    font-size: 16px;
+}
+
+/* Estilo para los grupos de opciones (nombres de los servidores) */
+select optgroup {
+    font-style: normal;
+    font-weight: bold;
+    color: var(--secondary-color);
+    background: #111;
+}
+/* ----------------------------------------- */
 
 .flashed-message {
     padding: 10px;
@@ -95,19 +108,60 @@ button:hover {
     font-size: 20px;
     position: relative;
     border: 1px solid;
-    animation: text-flicker 1.5s linear infinite;
+    transition: opacity 0.5s ease-out;
 }
-.success { color: #00ff41; border-color: #00ff41; }
-.error { color: #ff0000; border-color: #ff0000; }
-.close-btn { /* ... (se mantiene igual) ... */ }
+.success { color: #a5ffc9; border-color: #a5ffc9; }
+.error { color: #ff6b6b; border-color: #ff6b6b; }
+.close-btn {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    color: #FFFFFF;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    text-shadow: none;
+}
+.close-btn:hover { color: #ff6b6b; }
 
-/* Animaciones */
-@keyframes text-flicker {
-  0% { text-shadow: 0 0 5px var(--main-color), 0 0 10px var(--main-color); }
-  50% { text-shadow: 0 0 5px var(--main-color), 0 0 15px var(--main-color); }
-  100% { text-shadow: 0 0 5px var(--main-color), 0 0 10px var(--main-color); }
+.toggle-button {
+    background-color: var(--secondary-color);
+    color: var(--background-color);
+    border: 1px solid var(--main-color);
+    font-weight: bold;
+    text-shadow: none;
 }
-@keyframes scanlines {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 100%; }
+.toggle-button:hover {
+    background-color: var(--main-color);
+    color: var(--background-color);
+    box-shadow: 0 0 15px var(--main-color);
+}
+
+/* --- Estilos para el nuevo selector de color --- */
+.color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espacio entre el input y la vista previa */
+}
+input[type="color"] {
+    /* Ocultamos el input de color nativo del navegador */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 0;
+    height: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+.color-preview {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.color-preview:hover {
+    transform: scale(1.1);
 }
