@@ -28,9 +28,21 @@
                 <input type="hidden" name="submit_type" id="submit_type" value="simple">
                 <label for="text_channel_id">&gt; SELECCIONAR CANAL:</label>
                 <select id="text_channel_id" name="channel_id" required>
-                    </select>
+                    {% for guild in guilds_data %}
+                        <optgroup label="-- {{ guild.guild_name }} --">
+                            {% for channel in guild.channels %}
+                                <option value="{{ channel.id }}" {% if last_text_channel == channel.id|string %}selected{% elif not last_text_channel and channel.name == 'general-gay' %}selected{% endif %}>
+                                    #{{ channel.name }}
+                                </option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                </select>
 
-                <button type="button" id="toggle-mode-btn" class="toggle-button">&gt; CREAR MENSAJE EMBED</button>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="embed-toggle-checkbox">
+                    <label for="embed-toggle-checkbox">Crear Mensaje Embed?</label>
+                </div>
 
                 <div id="simple-fields">
                     <label for="message">&gt; CONTENIDO DEL MENSAJE:</label>
@@ -44,7 +56,6 @@
                     <input type="text" id="embed_title" name="embed_title">
                     <label for="embed_description">&gt; DESCRIPCIÓN DEL EMBED:</label>
                     <textarea id="embed_description" name="embed_description" rows="5"></textarea>
-
                     <label for="embed_color_input">&gt; COLOR DEL EMBED (HEX):</label>
                     <div class="color-picker-wrapper">
                         <input type="color" id="embed_color_input" name="embed_color" value="#a5ffc9">
@@ -60,7 +71,16 @@
              <form action="{{ url_for('web.control_voz') }}" method="post">
                 <label for="voice_channel_id">&gt; SELECCIONAR CANAL DE VOZ:</label>
                 <select id="voice_channel_id" name="channel_id" required>
-                    </select>
+                    {% for guild in guilds_data %}
+                        <optgroup label="-- {{ guild.guild_name }} --">
+                            {% for channel in guild.voice_channels %}
+                                <option value="{{ channel.id }}" {% if last_voice_channel == channel.id|string %}selected{% endif %}>
+                                    {{ channel.name }}
+                                </option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                </select>
                 <button type="submit" name="action" value="join">&gt; CONECTAR</button>
                 <button type="submit" name="action" value="leave">&gt; DESCONECTAR</button>
             </form>
