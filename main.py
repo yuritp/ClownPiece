@@ -1,11 +1,17 @@
+# main.py
 import discord
 from flask import Flask
 import threading
 from config import Config
 from web.routes import setup_routes
 import os
+import logging
+from utils.logger_setup import setup_logging  # <-- IMPORTAMOS LA CONFIGURACIÓN
 
-# --- Configuración del Bot de Discord ---
+# --- Configuración del Logging y el Bot ---
+setup_logging()  # <-- INICIALIZAMOS LOS LOGS AL PRINCIPIO DE TODO
+log = logging.getLogger(__name__)
+
 intents = discord.Intents.default()
 intents.guilds = True
 intents.message_content = True
@@ -16,18 +22,13 @@ bot = discord.Bot(intents=intents)
 
 @bot.event
 async def on_ready():
-    print("=" * 30)
-    print(f'✅ {bot.user} se ha conectado a Discord!')
-    print(f"🌍 Panel de control web disponible en http://127.0.0.1:5000")
-    print("=" * 30)
+    log.info(f"✅ {bot.user} se ha conectado a Discord!")
+    log.info(f"🌍 Panel de control web disponible en http://127.0.0.1:5000")
 
 
 # --- Configuración del Servidor Web Flask ---
-# Le decimos a Flask dónde encontrar los archivos de la web relativos a la raíz del proyecto
 app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
 app.secret_key = Config.FLASK_SECRET_KEY
-
-# Registramos el Blueprint de las rutas web
 web_routes = setup_routes(bot)
 app.register_blueprint(web_routes)
 
@@ -38,14 +39,14 @@ def load_cogs():
         if filename.endswith('.py') and not filename.startswith('__'):
             try:
                 bot.load_extension(f'cogs.{filename[:-3]}')
-                print(f"🔩 Cog '{filename[:-3]}' cargado.")
+                log.info(f"🔩 Cog '{filename[:-3]}' cargado.")
             except Exception as e:
-                print(f"🔥 Error al cargar el cog '{filename[:-3]}': {e}")
+                log.error(f"🔥 Error al cargar el cog '{filename[:-3]}'", exc_info=e)
 
 
 if __name__ == "__main__":
     if not Config.TOKEN:
-        print("🚨 ERROR: El token de Discord no está configurado en el archivo .env")
+        log.critical("🚨 ERROR: El token de Discord no está configurado en el archivo .env")
     else:
         load_cogs()
 
