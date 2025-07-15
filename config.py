@@ -15,3 +15,6 @@ class Config:
 
     # Ruta para guardar las descargas
     DOWNLOADS_PATH = "downloads"
+
+    # ID del canal donde se registrarán los eventos (logs de auditoría)
+    AUDIT_LOG_CHANNEL_ID = 1394673936385576991

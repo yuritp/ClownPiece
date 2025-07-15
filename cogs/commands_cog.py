@@ -1,17 +1,19 @@
-# cogs/commands_cog.py
 import discord
 from discord.ext import commands
-import datetime
+import logging
+
+log = logging.getLogger(__name__)
 
 class CommandsCog(commands.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
 
-    # Grupo de comandos para /info
     info_group = discord.SlashCommandGroup("info", "Comandos para obtener información.")
+    voice_group = discord.SlashCommandGroup("voz", "Comandos para controlar el bot en canales de voz.")
 
     @info_group.command(name="servidor", description="Muestra información del servidor actual.")
     async def servidor(self, ctx: discord.ApplicationContext):
+        log.info(f"Comando /info servidor ejecutado por {ctx.author} en '{ctx.guild.name}'.")
         guild = ctx.guild
         embed = discord.Embed(title=f"ℹ️ Información de {guild.name}", color=discord.Color.blue())
         embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
@@ -24,6 +26,7 @@ class CommandsCog(commands.Cog):
     @info_group.command(name="usuario", description="Muestra información de un usuario.")
     async def usuario(self, ctx: discord.ApplicationContext, miembro: discord.Option(discord.Member, "Elige un miembro", required=False)):
         miembro = miembro or ctx.author
+        log.info(f"Comando /info usuario ejecutado por {ctx.author} para ver a {miembro.name}.")
         embed = discord.Embed(title=f"👤 Información de {miembro.display_name}", color=miembro.color)
         embed.set_thumbnail(url=miembro.display_avatar.url)
         embed.add_field(name="Nombre", value=miembro.name, inline=True)
@@ -34,25 +37,24 @@ class CommandsCog(commands.Cog):
         embed.add_field(name="Roles", value=", ".join(roles) if roles else "Ninguno", inline=False)
         await ctx.respond(embed=embed)
 
-    # Grupo de comandos para /voz
-    voice_group = discord.SlashCommandGroup("voz", "Comandos para controlar el bot en canales de voz.")
-
     @voice_group.command(name="unirse", description="Hace que el bot se una a un canal de voz.")
     async def unirse(self, ctx: discord.ApplicationContext, canal: discord.Option(discord.VoiceChannel, "Canal de voz al que unirse")):
+        log.info(f"Comando /voz unirse ejecutado por {ctx.author} para el canal '{canal.name}'.")
         try:
             await canal.connect()
             await ctx.respond(f"✅ Conectado a {canal.mention}", ephemeral=True)
         except Exception as e:
+            log.error(f"Error en /voz unirse: {e}")
             await ctx.respond(f"🔥 Error al conectar: {e}", ephemeral=True)
 
     @voice_group.command(name="salir", description="Desconecta el bot del canal de voz.")
     async def salir(self, ctx: discord.ApplicationContext):
+        log.info(f"Comando /voz salir ejecutado por {ctx.author}.")
         if ctx.voice_client:
             await ctx.voice_client.disconnect()
             await ctx.respond("👋 Desconectado del canal de voz.", ephemeral=True)
         else:
             await ctx.respond("❌ No estoy en ningún canal de voz.", ephemeral=True)
-
 
 def setup(bot):
     bot.add_cog(CommandsCog(bot))
