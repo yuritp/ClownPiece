@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>[ Visor de Logs ]</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Estilos específicos para la tabla de logs */
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+        }
+        .logs-table th, .logs-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: left;
+            word-break: break-all; /* Para que el texto largo no rompa la tabla */
+        }
+        .logs-table th {
+            background-color: var(--border-color);
+            color: #FFFFFF;
+            text-shadow: none;
+        }
+        .back-button {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>VISOR DE LOGS DE AUDITORÍA</h1>
+        </header>
+
+        <div class="logs-container">
+            <table class="logs-table">
+                <thead>
+                    <tr>
+                        <th>Fecha (UTC)</th>
+                        <th>Tipo de Evento</th>
+                        <th>Autor</th>
+                        <th>Canal</th>
+                        <th>Mensaje / Detalles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.timestamp.split('.')[0].replace('T', ' ') }}</td>
+                        <td>{{ log.event_type }}</td>
+                        <td>{{ log.author_name }}</td>
+                        <td>#{{ log.channel_name }}</td>
+                        <td>
+                            {% if log.message %}
+                                <strong>Mensaje:</strong> {{ log.message }}<br>
+                            {% endif %}
+                            {% if log.details %}
+                                <strong>Detalles:</strong> {{ log.details }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center;">No hay registros en la base de datos.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="{{ url_for('web.index') }}">
+                <button class="back-button">&gt; VOLVER AL PANEL PRINCIPAL</button>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
