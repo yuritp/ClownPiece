@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>[ ClownPiece Terminal ]</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CLOWNPIECE C2 SERVER</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flashed-message {{ category }}">
+                        <span class="close-btn">&times;</span>
+                        &gt; {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="panel-envio">
+            <h2>// COMMS_TERMINAL</h2>
+            <form id="unified-form" action="{{ url_for('web.enviar') }}" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="submit_type" id="submit_type" value="simple">
+                <label for="text_channel_id">&gt; SELECT_CHANNEL:</label>
+                <select id="text_channel_id" name="channel_id" required>
+                    {% for guild in guilds_data %}
+                        <optgroup label="-- {{ guild.guild_name }} --">
+                            {% for channel in guild.channels %}
+                                <option value="{{ channel.id }}" {% if last_text_channel == channel.id|string %}selected{% elif not last_text_channel and channel.name == 'general-gay' %}selected{% endif %}>
+                                    #{{ channel.name }}
+                                </option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                </select>
+
+                <button type="button" id="toggle-mode-btn">&gt; ENGAGE_EMBED_MODE</button>
+
+                <div id="simple-fields">
+                    <label for="message">&gt; MESSAGE_PAYLOAD:</label>
+                    <textarea id="message" name="message" rows="4"></textarea>
+                    <label for="file">&gt; ATTACH_FILE:</label>
+                    <input type="file" id="file" name="file">
+                </div>
+
+                <div id="embed-fields" style="display: none;">
+                    <label for="embed_title">&gt; EMBED_TITLE:</label>
+                    <input type="text" id="embed_title" name="embed_title">
+                    <label for="embed_description">&gt; EMBED_DESC:</label>
+                    <textarea id="embed_description" name="embed_description" rows="5"></textarea>
+                    <label for="embed_color">&gt; EMBED_HEX_COLOR:</label>
+                    <input type="text" id="embed_color" name="embed_color" value="#00ff41">
+                </div>
+                <button type="submit">&gt; EXECUTE_SEND</button>
+            </form>
+        </div>
+
+        <div class="panel-voz">
+             <h2>// VOICE_CONTROL</h2>
+             <form action="{{ url_for('web.control_voz') }}" method="post">
+                <label for="voice_channel_id">&gt; SELECT_VOICE_CHANNEL:</label>
+                <select id="voice_channel_id" name="channel_id" required>
+                    {% for guild in guilds_data %}
+                        <optgroup label="-- {{ guild.guild_name }} --">
+                            {% for channel in guild.voice_channels %}
+                                <option value="{{ channel.id }}" {% if last_voice_channel == channel.id|string %}selected{% endif %}>
+                                    {{ channel.name }}
+                                </option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                </select>
+                <button type="submit" name="action" value="join">&gt; CONNECT</button>
+                <button type="submit" name="action" value="leave">&gt; DISCONNECT</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ... (pega aquí el mismo bloque de JavaScript de la respuesta anterior)
+    </script>
+</body>
+</html>

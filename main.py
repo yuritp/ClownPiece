@@ -1,4 +1,3 @@
-# main.py
 import discord
 from flask import Flask
 import threading
@@ -10,7 +9,7 @@ import os
 intents = discord.Intents.default()
 intents.guilds = True
 intents.message_content = True
-intents.members = True  # <-- INTENT NECESARIO PARA on_member_join y on_member_remove
+intents.members = True
 
 bot = discord.Bot(intents=intents)
 
@@ -24,8 +23,10 @@ async def on_ready():
 
 
 # --- Configuración del Servidor Web Flask ---
-app = Flask(__name__)
+# Le decimos a Flask dónde encontrar los archivos de la web relativos a la raíz del proyecto
+app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
 app.secret_key = Config.FLASK_SECRET_KEY
+
 # Registramos el Blueprint de las rutas web
 web_routes = setup_routes(bot)
 app.register_blueprint(web_routes)
@@ -48,10 +49,8 @@ if __name__ == "__main__":
     else:
         load_cogs()
 
-        # Iniciar Flask en un hilo separado
         flask_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5000, debug=False))
         flask_thread.daemon = True
         flask_thread.start()
 
-        # Iniciar el bot de Discord
         bot.run(Config.TOKEN)

@@ -1,29 +1,58 @@
 # cogs/commands_cog.py
 import discord
 from discord.ext import commands
+import datetime
 
 class CommandsCog(commands.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
 
-    @commands.slash_command(name="enviar", description="Envía un mensaje o un archivo a un canal.")
-    async def enviar(
-        self,
-        ctx: discord.ApplicationContext,
-        canal: discord.TextChannel,
-        mensaje: discord.Option(str, "El texto que quieres enviar.", required=False),
-        archivo: discord.Option(discord.Attachment, "El archivo que quieres adjuntar.", required=False)
-    ):
-        if not mensaje and not archivo:
-            await ctx.respond("❌ Debes proporcionar al menos un mensaje o un archivo.", ephemeral=True)
-            return
+    # Grupo de comandos para /info
+    info_group = discord.SlashCommandGroup("info", "Comandos para obtener información.")
 
+    @info_group.command(name="servidor", description="Muestra información del servidor actual.")
+    async def servidor(self, ctx: discord.ApplicationContext):
+        guild = ctx.guild
+        embed = discord.Embed(title=f"ℹ️ Información de {guild.name}", color=discord.Color.blue())
+        embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
+        embed.add_field(name="ID del Servidor", value=guild.id, inline=False)
+        embed.add_field(name="Propietario", value=guild.owner.mention, inline=True)
+        embed.add_field(name="Miembros", value=guild.member_count, inline=True)
+        embed.add_field(name="Fecha de Creación", value=guild.created_at.strftime("%d/%m/%Y"), inline=False)
+        await ctx.respond(embed=embed)
+
+    @info_group.command(name="usuario", description="Muestra información de un usuario.")
+    async def usuario(self, ctx: discord.ApplicationContext, miembro: discord.Option(discord.Member, "Elige un miembro", required=False)):
+        miembro = miembro or ctx.author
+        embed = discord.Embed(title=f"👤 Información de {miembro.display_name}", color=miembro.color)
+        embed.set_thumbnail(url=miembro.display_avatar.url)
+        embed.add_field(name="Nombre", value=miembro.name, inline=True)
+        embed.add_field(name="Apodo", value=miembro.nick or "Ninguno", inline=True)
+        embed.add_field(name="ID de Usuario", value=miembro.id, inline=False)
+        embed.add_field(name="Se unió al servidor", value=miembro.joined_at.strftime("%d/%m/%Y"), inline=False)
+        roles = [role.mention for role in miembro.roles if role.name != "@everyone"]
+        embed.add_field(name="Roles", value=", ".join(roles) if roles else "Ninguno", inline=False)
+        await ctx.respond(embed=embed)
+
+    # Grupo de comandos para /voz
+    voice_group = discord.SlashCommandGroup("voz", "Comandos para controlar el bot en canales de voz.")
+
+    @voice_group.command(name="unirse", description="Hace que el bot se una a un canal de voz.")
+    async def unirse(self, ctx: discord.ApplicationContext, canal: discord.Option(discord.VoiceChannel, "Canal de voz al que unirse")):
         try:
-            file_to_send = await archivo.to_file() if archivo else None
-            await canal.send(content=mensaje, file=file_to_send)
-            await ctx.respond(f"✅ Contenido enviado a {canal.mention}.", ephemeral=True)
+            await canal.connect()
+            await ctx.respond(f"✅ Conectado a {canal.mention}", ephemeral=True)
         except Exception as e:
-            await ctx.respond(f"🔥 Ocurrió un error: {e}", ephemeral=True)
+            await ctx.respond(f"🔥 Error al conectar: {e}", ephemeral=True)
+
+    @voice_group.command(name="salir", description="Desconecta el bot del canal de voz.")
+    async def salir(self, ctx: discord.ApplicationContext):
+        if ctx.voice_client:
+            await ctx.voice_client.disconnect()
+            await ctx.respond("👋 Desconectado del canal de voz.", ephemeral=True)
+        else:
+            await ctx.respond("❌ No estoy en ningún canal de voz.", ephemeral=True)
+
 
 def setup(bot):
     bot.add_cog(CommandsCog(bot))
