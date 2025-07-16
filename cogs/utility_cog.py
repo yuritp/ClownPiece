@@ -14,33 +14,6 @@ class UtilityCog(commands.Cog):
         self.reminders = []
         self.check_reminders.start()
 
-    # --- COMANDO DE ENCUESTAS ---
-    @commands.slash_command(name="poll", description="Crea una encuesta con hasta 10 opciones.")
-    async def poll(self,
-                   ctx: discord.ApplicationContext,
-                   pregunta: str,
-                   opciones: str
-                   ):
-        log.info(f"Comando /poll usado por {ctx.author} con la pregunta: '{pregunta}'")
-        opciones_lista = [op.strip() for op in opciones.split(';') if op.strip()]
-
-        if len(opciones_lista) < 2 or len(opciones_lista) > 10:
-            await ctx.respond("❌ Debes proporcionar entre 2 y 10 opciones, separadas por punto y coma (;).",
-                              ephemeral=True)
-            return
-
-        embed = discord.Embed(
-            title=f"📊 ENCUESTA: {pregunta}",
-            description="\n\n".join(f"{i + 1}️⃣ {op}" for i, op in enumerate(opciones_lista)),
-            color=discord.Color.purple(),
-            timestamp=datetime.datetime.utcnow()
-        )
-        embed.set_footer(text=f"Encuesta creada por {ctx.author.display_name}")
-
-        poll_message = await ctx.respond(embed=embed)
-        # Añadimos las reacciones para que los usuarios voten
-        for i in range(len(opciones_lista)):
-            await poll_message.add_reaction(f"{i + 1}\u20e3")
 
     # --- SISTEMA DE RECORDATORIOS ---
     @commands.slash_command(name="remindme", description="Establece un recordatorio.")

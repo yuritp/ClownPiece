@@ -16,5 +16,7 @@ class Config:
     # Ruta para guardar las descargas
     DOWNLOADS_PATH = "downloads"
 
+    RANDOM_AUDIO_PATH = os.path.join(os.getcwd(), 'random_audio')
+
     # ID del canal donde se registrarán los eventos (logs de auditoría)
     AUDIT_LOG_CHANNEL_ID = 1394673936385576991

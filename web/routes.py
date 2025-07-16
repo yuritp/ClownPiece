@@ -3,28 +3,16 @@ import asyncio
 import re
 import discord
 import logging
-
-# --- IMPORTACIONES LOCALES ---
 from utils.downloader import download_video
 from database import database_manager as db
 
-# Obtenemos un logger específico para este módulo
 log = logging.getLogger(__name__)
-
-# Creamos el Blueprint para organizar las rutas
 web_blueprint = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 
 
 def setup_routes(bot):
-    """
-    Configura todas las rutas para la aplicación web y las asocia con el bot.
-    """
-
     @web_blueprint.route('/')
     def index():
-        """
-        Renderiza la página principal del panel de control.
-        """
         last_text_channel = request.args.get('last_text_channel')
         last_voice_channel = request.args.get('last_voice_channel')
         guilds_data = []
@@ -45,9 +33,6 @@ def setup_routes(bot):
 
     @web_blueprint.route('/enviar', methods=['POST'])
     def enviar():
-        """
-        Maneja el envío de mensajes (simples o embeds) desde la web.
-        """
         submit_type = request.form.get('submit_type', 'simple')
         channel_id = request.form['channel_id']
         log.info(f"Petición web /enviar recibida. Tipo: {submit_type}, Canal: {channel_id}")
@@ -84,9 +69,6 @@ def setup_routes(bot):
 
     @web_blueprint.route('/control-voz', methods=['POST'])
     def control_voz():
-        """
-        Maneja las acciones de voz (unirse/salir) desde la web.
-        """
         channel_id = request.form.get('channel_id')
         action = request.form.get('action')
         log.info(f"Petición web /control-voz recibida. Acción: {action}, Canal: {channel_id}")
@@ -114,16 +96,13 @@ def setup_routes(bot):
 
     @web_blueprint.route('/logs')
     def view_logs():
-        """
-        Muestra una página con todos los logs de auditoría de la base de datos.
-        """
-        log.info("Petición web /logs recibida para ver la base de datos.")
+        log.info("Petición web /logs recibida.")
         future = asyncio.run_coroutine_threadsafe(process_logs_for_display(bot), bot.loop)
         try:
             processed_logs = future.result()
             return render_template('logs.html', logs=processed_logs)
         except Exception as e:
-            log.error("Error al procesar los logs para la vista web.", exc_info=e)
+            log.error("Error al procesar logs para la vista web.", exc_info=e)
             flash("🔥 No se pudieron cargar los logs de la base de datos.", "error")
             return redirect(url_for('web.index'))
 
