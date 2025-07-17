@@ -13,3 +13,9 @@ __pycache__/
 
 # Ignorar archivos de configuración del IDE (opcional pero recomendado)
 .idea/
+
+# ignora la base de datos SQLite
+clownpiece_data.db
+
+# ignora los audios
+random_audio/
