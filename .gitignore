@@ -15,7 +15,7 @@ __pycache__/
 .idea/
 
 # ignora la base de datos SQLite
-clownpiece_data.db
+*.db
 
 # ignora los audios
 random_audio/
