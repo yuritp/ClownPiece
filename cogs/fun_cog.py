@@ -1,5 +1,3 @@
-import asyncio
-
 import discord
 from discord.ext import commands
 import logging
@@ -14,7 +12,6 @@ class FunCog(commands.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
         self.http_session = None
-        self.active_polls = {}
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """
@@ -36,7 +33,7 @@ class FunCog(commands.Cog):
 
     async def get_json(self, url):
         """
-        Función de ayuda para hacer peticiones a APIs usando la sesión segura.
+        Función de ayuda para hacer peticiones a API usando la sesión segura.
         """
         session = await self._get_session()
         try:
@@ -147,7 +144,6 @@ class FunCog(commands.Cog):
     @commands.slash_command(name="avatar", description="Muestra el avatar de un usuario.")
     async def avatar(self, ctx: discord.ApplicationContext,
                      usuario: discord.Option(discord.Member, "Usuario cuyo avatar quieres ver", required=False)):
-        """Muestra el avatar de un usuario (o el tuyo si no se especifica)."""
         log.info(f"Comando /avatar usado por {ctx.author} para {usuario if usuario else 'sí mismo'}.")
 
         target_user = usuario if usuario else ctx.author
@@ -161,125 +157,6 @@ class FunCog(commands.Cog):
         embed.set_footer(text=f"Solicitado por {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
 
         await ctx.respond(embed=embed)
-
-    @commands.slash_command(name="poll", description="Crea una encuesta con opciones.")
-    async def poll(self, ctx: discord.ApplicationContext,
-                   pregunta: discord.Option(str, "La pregunta de la encuesta."),
-                   opcion1: discord.Option(str, "Primera opción."),
-                   opcion2: discord.Option(str, "Segunda opción."),
-                   opcion3: discord.Option(str, "Tercera opción.", required=False),
-                   opcion4: discord.Option(str, "Cuarta opción.", required=False),
-                   opcion5: discord.Option(str, "Quinta opción.", required=False),
-                   duracion: discord.Option(int, "Duración de la encuesta en minutos (0 para indefinido).", default=0)
-                   ):
-        """Crea una encuesta interactiva con reacciones."""
-        log.info(f"Comando /poll usado por {ctx.author}: '{pregunta}'")
-
-        options = [opcion1, opcion2, opcion3, opcion4, opcion5]
-        valid_options = [opt for opt in options if opt is not None]
-
-        if len(valid_options) < 2:
-            return await ctx.respond("❌ Necesitas al menos dos opciones para una encuesta.", ephemeral=True)
-
-        emoji_map = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣", 5: "5️⃣"}
-
-        description = f"**{pregunta}**\n\n"
-        for i, opt in enumerate(valid_options):
-            description += f"{emoji_map[i + 1]} {opt}\n"
-
-        if duracion > 0:
-            description += f"\n_La encuesta finalizará en {duracion} minutos._"
-        else:
-            description += "\n_Esta encuesta no tiene límite de tiempo._"
-
-        embed = discord.Embed(
-            title="📊 Nueva Encuesta",
-            description=description,
-            color=discord.Color.blue()
-        )
-        embed.set_footer(text=f"Encuesta iniciada por {ctx.author.display_name}",
-                         icon_url=ctx.author.display_avatar.url)
-
-        poll_message = await ctx.respond(embed=embed)
-        sent_message = await poll_message.original_response()
-
-        for i in range(len(valid_options)):
-            await sent_message.add_reaction(emoji_map[i + 1])
-
-        if duracion > 0:
-            self.active_polls[sent_message.id] = {
-                "ctx": ctx,
-                "message": sent_message,
-                "end_time": time.time() + (duracion * 60)
-            }
-            self.bot.loop.create_task(self._end_poll_after_delay(sent_message.id, duracion * 60))
-
-    async def _end_poll_after_delay(self, message_id: int, delay_seconds: int):
-        """Espera el tiempo especificado y finaliza la encuesta."""
-        await asyncio.sleep(delay_seconds)
-
-        if message_id not in self.active_polls:
-            return
-
-        poll_data = self.active_polls.pop(message_id)
-        ctx = poll_data["ctx"]
-        message = poll_data["message"]
-
-        log.info(f"Finalizando encuesta {message.id} automáticamente.")
-        await self._finalize_poll(ctx, message)
-
-    async def _finalize_poll(self, ctx: discord.ApplicationContext, message: discord.Message):
-        """Calcula y muestra los resultados de la encuesta."""
-        try:
-            message = await message.channel.fetch_message(message.id)
-
-            emoji_map = {"1️⃣": "1️⃣", "2️⃣": "2️⃣", "3️⃣": "3️⃣", "4️⃣": "4️⃣", "5️⃣": "5️⃣"}
-
-            results = {}
-            for reaction in message.reactions:
-                if str(reaction.emoji) in emoji_map.values():
-                    users = [user async for user in reaction.users() if user != self.bot.user]
-                    results[str(reaction.emoji)] = len(users)
-
-            sorted_results = sorted(results.items(), key=lambda item: item[1], reverse=True)
-
-            original_embed = message.embeds[0]
-            original_description = original_embed.description
-            question_match = original_description.split('\n\n')[0]
-            original_options = original_description.split('\n\n')[1].split('\n')
-
-            results_description = f"**Resultados de la encuesta: {question_match}**\n\n"
-
-            emoji_to_option_text = {}
-            for line in original_options:
-                match = discord.utils.find(lambda emoji_key: line.startswith(emoji_key), emoji_map.values())
-                if match:
-                    emoji_to_option_text[match] = line.replace(match, '').strip()
-
-            if not sorted_results:
-                results_description += "No hubo votos."
-            else:
-                total_votes = sum(results.values())
-                for emoji, count in sorted_results:
-                    option_text = emoji_to_option_text.get(emoji, "Opción Desconocida")
-                    percentage = (count / total_votes * 100) if total_votes > 0 else 0
-                    results_description += f"{emoji} **{option_text}**: `{count}` votos (`{percentage:.1f}%)`\n"
-
-            results_embed = discord.Embed(
-                title="✅ Encuesta Finalizada",
-                description=results_description,
-                color=discord.Color.green()
-            )
-            results_embed.set_footer(
-                text=f"Encuesta iniciada por {original_embed.footer.text.replace('Encuesta iniciada por ', '')}")
-
-            await message.reply(embed=results_embed)
-            await message.clear_reactions()
-
-        except Exception as e:
-            log.error(f"Error al finalizar la encuesta {message.id}: {e}", exc_info=True)
-            await ctx.send("❌ Hubo un error al calcular los resultados de la encuesta.", ephemeral=True)
-
 
 def setup(bot):
     """Función de configuración que Discord.py usa para añadir el cog."""

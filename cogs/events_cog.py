@@ -7,7 +7,6 @@ import logging
 
 # --- IMPORTACIONES LOCALES ---
 from config import Config
-from utils.downloader import download_video
 from database import database_manager as db
 
 # Obtenemos un logger específico para este módulo
@@ -19,24 +18,13 @@ class EventsCog(commands.Cog):
         self.bot = bot
 
     async def get_audit_log_channel(self):
-        """Función de ayuda para obtener el canal de logs de auditoría."""
+        """Obtiene el canal de logs de auditoría configurado en el bot."""
         return self.bot.get_channel(Config.AUDIT_LOG_CHANNEL_ID)
 
-    # --- LISTENER DE MENSAJES PARA ENLACES DE TWITTER/X ---
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
-        if message.author.bot:
-            return
-
-        match = re.search(r'https?://(twitter|x)\.com/\w+/status/\d+', message.content)
-        if match:
-            url = match.group(0)
-            log.info(f"Enlace de X/Twitter detectado en mensaje de {message.author}: {url}")
-            await self.process_twitter_link(url, message.channel)
-
-    # --- LISTENERS PARA EL LOG DE AUDITORÍA ---
+    # --- LISTENERS DE AUDITORÍA ---
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message):
+        """Registra y reporta la eliminación de mensajes."""
         if message.author.bot or not message.content:
             return
 
@@ -57,6 +45,7 @@ class EventsCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        """Registra y reporta la edición de mensajes."""
         if before.author.bot or before.content == after.content:
             return
 
@@ -80,6 +69,7 @@ class EventsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState,
                                     after: discord.VoiceState):
+        """Registra y reporta cambios de estado en canales de voz."""
         if member.bot: return
 
         log_channel = await self.get_audit_log_channel()
@@ -115,41 +105,6 @@ class EventsCog(commands.Cog):
             embed.timestamp = datetime.datetime.now(datetime.timezone.utc)
             await log_channel.send(embed=embed)
 
-    # --- FUNCIÓN DE AYUDA PARA PROCESAR VÍDEOS ---
-    async def process_twitter_link(self, url: str, channel: discord.TextChannel,
-                                   original_message: discord.Message = None):
-        if original_message:
-            processing_msg = original_message
-            await processing_msg.edit(content=f"{processing_msg.content}\n\n*📎 Procesando vídeo...*")
-        else:
-            processing_msg = await channel.send(f"📎 Enlace detectado. Procesando vídeo...")
-
-        video_path = None
-        try:
-            video_path = download_video(url)
-
-            if video_path and os.path.exists(video_path):
-                log.info(f"Vídeo de {url} descargado en '{video_path}'. Enviando a Discord.")
-                await channel.send(file=discord.File(video_path))
-
-                if original_message:
-                    clean_content = re.sub(r'\n\n\*📎 Procesando vídeo...\*', '', processing_msg.content)
-                    await processing_msg.edit(content=clean_content)
-                else:
-                    await processing_msg.delete()
-            elif video_path is None:
-                log.warning(f"No se encontró vídeo en el enlace: {url}")
-                await processing_msg.edit(content="🤔 No se encontró un vídeo en el enlace.")
-        except Exception as e:
-            log.error(f"Error procesando el enlace de Twitter {url}", exc_info=e)
-            await processing_msg.edit(content=f"🔥 Error durante el proceso: {e}")
-        finally:
-            if video_path and os.path.exists(video_path):
-                try:
-                    os.remove(video_path)
-                    log.info(f"🧹 Archivo local '{video_path}' eliminado.")
-                except OSError as e:
-                    log.error(f"🔥 Error al eliminar el archivo local '{video_path}'", exc_info=e)
 
 
 def setup(bot):
